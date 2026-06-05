@@ -1,5 +1,7 @@
 # Agent Relay API examples
 
+Set `AGENT_RELAY_URL` and `AGENT_API_TOKEN` in the agent environment before running these examples.
+
 ## curl — Markdown + image
 
 ```bash
@@ -24,12 +26,16 @@ curl -s -X POST "$BASE/api/agent/sessions/$SESSION/artifacts" \
 
 ## Python
 
+Use the same two environment variables. Example with explicit values (substitute from your host env):
+
 ```python
-import os
 import requests
 
-BASE = os.environ["AGENT_RELAY_URL"].rstrip("/")
-HEADERS = {"Authorization": f"Bearer {os.environ['AGENT_API_TOKEN']}"}
+relay_url = "https://arelay.app"  # AGENT_RELAY_URL
+api_token = "ar_your_token_here"  # AGENT_API_TOKEN
+
+BASE = relay_url.rstrip("/")
+HEADERS = {"Authorization": f"Bearer {api_token}"}
 
 r = requests.post(
     f"{BASE}/api/agent/sessions",

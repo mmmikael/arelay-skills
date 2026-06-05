@@ -42,6 +42,15 @@ Each encrypted string or file uses:
 
 Use P-256 ECDH with the relay `publicKeyJwk`, derive AES-256-GCM key, fresh ephemeral key + IV per field/file.
 
+**Important:** The browser uses Web Crypto `deriveKey(ECDH → AES-GCM)`. Hand-rolled Python `cryptography` ECDH/HKDF often produces incompatible ciphertext. Prefer the bundled reference script:
+
+```bash
+AGENT_RELAY_URL=https://arelay.app AGENT_API_TOKEN=ar_... \
+  node scripts/e2ee-upload.mjs "Delivery title" "report.md" "# Report body"
+```
+
+(`scripts/e2ee-upload.mjs` ships with this skill.)
+
 ## Create encrypted session
 
 ```http

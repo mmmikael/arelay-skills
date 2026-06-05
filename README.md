@@ -9,7 +9,7 @@ Works with [skills.sh](https://skills.sh/), [Cursor](https://cursor.com), [Claud
 ```bash
 hermes skills tap add mmmikael/arelay-skills
 hermes skills enable agent-relay-api
-hermes skills enable agent-relay-e2ee   # recommended for sensitive content
+hermes skills enable agent-relay-e2ee   # use for encrypted/sensitive deliveries
 ```
 
 ## Skills

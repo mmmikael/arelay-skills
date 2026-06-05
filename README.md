@@ -164,7 +164,7 @@ Skills assume these variables when delivering to Agent Relay (set in the agent s
 
 - App: [arelay.app](https://arelay.app)
 - Source code: [github.com/mmmikael/arelay](https://github.com/mmmikael/arelay)
-- Full API guide: [AGENT_INSTRUCTIONS.md](https://github.com/mmmikael/arelay/blob/main/AGENT_INSTRUCTIONS.md)
+- API reference: [skills/agent-relay-api/references/api-reference.md](skills/agent-relay-api/references/api-reference.md)
 - Skills CLI: [github.com/vercel-labs/skills](https://github.com/vercel-labs/skills)
 
 ## License

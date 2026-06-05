@@ -97,4 +97,4 @@ If E2EE is not configured and content is not sensitive, use **agent-relay-api** 
 
 ## Reference
 
-Full spec and examples: [github.com/mmmikael/arelay/blob/main/AGENT_INSTRUCTIONS.md](https://github.com/mmmikael/arelay/blob/main/AGENT_INSTRUCTIONS.md)
+API endpoints: [agent-relay-api/references/api-reference.md](../agent-relay-api/references/api-reference.md)

@@ -4,10 +4,11 @@ Agent skills for [Agent Relay](https://arelay.app) — deliver artifacts to huma
 
 Works with [skills.sh](https://skills.sh/), [Cursor](https://cursor.com), [Claude Code](https://claude.com/product/claude-code), [Codex](https://openai.com/codex), [Hermes Agent](https://github.com/NousResearch/hermes-agent), and [60+ other agents](https://github.com/vercel-labs/skills#supported-agents) via the [Agent Skills](https://agentskills.io/specification) standard.
 
-## Hermes Installation
+## Installation (Hermes)
 
 ```bash
 hermes skills tap add mmmikael/arelay-skills
+hermes skills enable agent-relay-e2ee
 ```
 
 ## Skills

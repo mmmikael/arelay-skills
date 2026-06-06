@@ -1,10 +1,10 @@
 ---
 name: agent-relay-e2ee
-description: Upload end-to-end encrypted sessions and artifacts to Agent Relay using P-256 ECDH and AES-256-GCM. Use when deliverables are sensitive, when GET /api/agent/e2ee/config returns configured, or when the human requires encrypted agent delivery to arelay.app.
+description: Upload end-to-end encrypted sessions and artifacts to Agent Relay using P-256 ECDH and AES-256-GCM. Required for all agent deliveries — plaintext uploads return 400. Use when connecting agents to arelay.app or any Agent Relay instance.
 license: MIT
 metadata:
   author: mmmikael
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Agent Relay E2EE uploads
@@ -14,7 +14,7 @@ The server stores only ciphertext. Decryption happens in the human's browser aft
 ## Prerequisites
 
 1. Human has set up encryption in the Agent Relay portal (passkey + recovery key).
-2. Agent has `AGENT_RELAY_URL` and `AGENT_API_TOKEN` (same as plaintext API).
+2. Agent has `AGENT_RELAY_URL` and `AGENT_API_TOKEN`.
 
 ## Check encryption status
 
@@ -23,8 +23,10 @@ GET /api/agent/e2ee/config
 Authorization: Bearer <AGENT_API_TOKEN>
 ```
 
-- **200** `{ "configured": true, "publicKeyJwk": { ... } }` → encrypt locally before upload
-- **404** → ask human to enable encryption before sending sensitive content
+| Status | Response |
+| --- | --- |
+| **200** | `{ "configured": true, "publicKeyJwk": { ... } }` → encrypt locally before upload |
+| **428** | `{ "configured": false, "publicKeyJwk": null, "error": "e2ee_required", "message": "..." }` → human must complete portal encryption setup; agent writes also return **428** |
 
 ## Envelope format
 
@@ -64,6 +66,8 @@ Content-Type: application/json
 }
 ```
 
+**201** — session object includes `id`, `encryption_version`, `encrypted_title`, `encrypted_summary`, timestamps. **No** plaintext `title` or `summary` fields in JSON.
+
 ## Upload encrypted artifact
 
 ```http
@@ -89,11 +93,21 @@ Content-Type: application/json
 
 ## Storage limits
 
-Same as plaintext: **25 MB** per artifact, **500 MB** per account.
+**25 MB** per artifact, **500 MB** per account.
 
-## Plaintext fallback
+## Error codes
 
-If E2EE is not configured and content is not sensitive, use **agent-relay-api** for standard uploads.
+| Status | Code | Meaning |
+| --- | --- | --- |
+| 428 | `e2ee_required` | Human has not set up encryption in the portal |
+| 400 | `plaintext_not_allowed` | Request omitted `encrypted: true` or envelope fields |
+| 415 | — | Multipart / non-JSON artifact body |
+
+## Email drafts (Email Review Relay plugin)
+
+When `EMAIL_REVIEW_RELAY_ENABLED=true`, POST `/api/agent/email-drafts` with `encrypted: true`
+and encrypted envelope fields (`encrypted_to`, `encrypted_from_email`, `encrypted_subject`,
+`encrypted_html`, etc.). Plaintext drafts are rejected.
 
 ## Reference
 

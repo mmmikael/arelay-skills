@@ -2,66 +2,70 @@
 
 Set `AGENT_RELAY_URL` and `AGENT_API_TOKEN` in the agent environment before running these examples.
 
-## curl — Markdown + image
+All deliveries must be end-to-end encrypted. Plaintext session fields (`title`, `summary`) and multipart artifact uploads are **not supported**.
+
+## Recommended — reference E2EE script
+
+From the **agent-relay-e2ee** skill directory:
 
 ```bash
-BASE="$AGENT_RELAY_URL"
+export AGENT_RELAY_URL=https://arelay.app
+export AGENT_API_TOKEN=ar_your_token_here
+
+node scripts/e2ee-upload.mjs "Weekly report" "report.md" "# Weekly report\n\nAll good."
+```
+
+Output: `{ "sessionId": "...", "artifactId": "..." }`
+
+## curl — check E2EE config
+
+```bash
+BASE="${AGENT_RELAY_URL%/}"
 TOKEN="$AGENT_API_TOKEN"
 
-SESSION=$(curl -s -X POST "$BASE/api/agent/sessions" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Weekly report","summary":"Metrics and chart"}' \
-  | jq -r '.session.id')
-
-curl -s -X POST "$BASE/api/agent/sessions/$SESSION/artifacts" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"filename":"report.md","content_type":"text/markdown","content":"# Weekly report\n\nAll good."}'
-
-curl -s -X POST "$BASE/api/agent/sessions/$SESSION/artifacts" \
-  -H "Authorization: Bearer $TOKEN" \
-  -F "file=@./chart.png"
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE/api/agent/e2ee/config" | jq .
+# configured: true + publicKeyJwk → proceed
+# 428 + e2ee_required → human must set up encryption in the portal
 ```
 
-## Python
+## Python — use the Node reference script
 
-Use the same two environment variables. Example with explicit values (substitute from your host env):
+Hand-rolled Python ECDH/HKDF often produces ciphertext the portal cannot decrypt. Prefer subprocess to the bundled script:
 
 ```python
-import requests
+import json
+import os
+import subprocess
 
-relay_url = "https://arelay.app"  # AGENT_RELAY_URL
-api_token = "ar_your_token_here"  # AGENT_API_TOKEN
-
-BASE = relay_url.rstrip("/")
-HEADERS = {"Authorization": f"Bearer {api_token}"}
-
-r = requests.post(
-    f"{BASE}/api/agent/sessions",
-    headers={**HEADERS, "Content-Type": "application/json"},
-    json={"title": "API design draft", "summary": "OpenAPI + notes"},
-    timeout=60,
+env = {
+    **os.environ,
+    "AGENT_RELAY_URL": os.environ["AGENT_RELAY_URL"],
+    "AGENT_API_TOKEN": os.environ["AGENT_API_TOKEN"],
+}
+result = subprocess.run(
+    [
+        "node",
+        "path/to/agent-relay-e2ee/scripts/e2ee-upload.mjs",
+        "API design draft",
+        "design.md",
+        "# API design\n\n...",
+    ],
+    env=env,
+    capture_output=True,
+    text=True,
+    check=True,
 )
-r.raise_for_status()
-session_id = r.json()["session"]["id"]
-
-requests.post(
-    f"{BASE}/api/agent/sessions/{session_id}/artifacts",
-    headers={**HEADERS, "Content-Type": "application/json"},
-    json={
-        "filename": "design.md",
-        "content_type": "text/markdown",
-        "content": "# API design\n\n...",
-    },
-    timeout=60,
-).raise_for_status()
-
-with open("diagram.png", "rb") as f:
-    requests.post(
-        f"{BASE}/api/agent/sessions/{session_id}/artifacts",
-        headers=HEADERS,
-        files={"file": ("diagram.png", f, "image/png")},
-        timeout=120,
-    ).raise_for_status()
+print(json.loads(result.stdout))
 ```
+
+Install the skill globally or copy `e2ee-upload.mjs` into your agent workspace.
+
+## Legacy plaintext examples (removed)
+
+The following no longer work against current Agent Relay:
+
+- `POST /api/agent/sessions` with `{ "title", "summary" }`
+- JSON artifacts with `{ "content": "..." }`
+- `multipart/form-data` file upload
+
+Use **agent-relay-e2ee** instead.

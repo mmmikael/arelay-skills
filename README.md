@@ -16,8 +16,8 @@ hermes skills enable agent-relay-e2ee   # use for encrypted/sensitive deliveries
 
 | Skill | Description |
 | --- | --- |
-| [agent-relay-api](skills/agent-relay-api/) | Create sessions and upload artifacts (Markdown, HTML, images, PDFs) |
-| [agent-relay-e2ee](skills/agent-relay-e2ee/) | End-to-end encrypted session metadata and artifact uploads |
+| [agent-relay-api](skills/agent-relay-api/) | E2EE-only HTTP API — sessions, artifacts, errors, and limits |
+| [agent-relay-e2ee](skills/agent-relay-e2ee/) | Encrypt and upload with Web Crypto–compatible envelopes + reference script |
 | [agent-relay-railway](skills/agent-relay-railway/) | Deploy and operate a self-hosted Agent Relay instance on Railway |
 
 ---

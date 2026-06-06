@@ -1,15 +1,17 @@
 ---
 name: agent-relay-api
-description: Deliver files and reports to a human via the Agent Relay HTTP API (arelay.app). Use when sending deliverables outside chat, creating inbox sessions, uploading Markdown/HTML/images/PDFs, or when the user mentions Agent Relay, arelay, or agent inbox delivery.
+description: Deliver end-to-end encrypted files and reports to a human via the Agent Relay HTTP API (arelay.app). Use when sending deliverables outside chat, creating inbox sessions, uploading Markdown/HTML/images/PDFs, or when the user mentions Agent Relay, arelay, or agent inbox delivery.
 license: MIT
 metadata:
   author: mmmikael
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Agent Relay API
 
 Deliver artifacts to the human's private inbox instead of email or chat attachments. Each delivery is a **session** (one thread); files are **artifacts**.
+
+All agent content must be **end-to-end encrypted** before upload. Load **agent-relay-e2ee** for envelope format and the reference upload script.
 
 ## When to use
 
@@ -33,25 +35,28 @@ Every request:
 Authorization: Bearer <AGENT_API_TOKEN>
 ```
 
+The human must complete **Set up encryption** in the portal before agent deliveries work.
+
 ## Workflow
 
-1. `POST /api/agent/sessions` with `title` and optional `summary`
-2. `POST /api/agent/sessions/<session_id>/artifacts` for each file
-3. Optionally `PATCH /api/agent/sessions/<session_id>` to update summary
-4. Tell the human: *"Sent to Agent Relay — session: \<title\>"* (no UUID needed)
+1. `GET /api/agent/e2ee/config` — if **428**, human must finish encryption setup
+2. Encrypt title/summary locally; `POST /api/agent/sessions` with `encrypted: true` and envelope fields
+3. Encrypt each file; `POST /api/agent/sessions/<session_id>/artifacts` (JSON only, one file per request)
+4. Optionally `PATCH /api/agent/sessions/<session_id>` with new encrypted title/summary
+5. Tell the human: *"Sent to Agent Relay — check your inbox"* (session id is in the API response if needed)
 
 One session per logical delivery. Re-use the same `session_id` for all files in that delivery.
 
-## Upload methods
+**Fastest path:** use the bundled script from **agent-relay-e2ee**:
 
-| Content | Method | Content-Type |
-| --- | --- | --- |
-| Markdown, HTML, text, JSON | JSON body with `content` | `application/json` |
-| Images, PDFs, binaries | `multipart/form-data` field `file` | `multipart/form-data` |
+```bash
+AGENT_RELAY_URL=https://arelay.app AGENT_API_TOKEN=ar_... \
+  node scripts/e2ee-upload.mjs "Delivery title" "report.md" "# Report body"
+```
 
-JSON artifact fields: `filename`, `content_type`, `content` (required).
+## Session JSON shape
 
-Common `content_type`: `text/markdown`, `text/html`, `text/plain`, `application/json`, `image/png`, `application/pdf`.
+API responses include `encrypted_title` and `encrypted_summary` envelopes only — **no** plaintext `title` or `summary` fields. The human's browser decrypts for display.
 
 ## Storage limits
 
@@ -63,8 +68,11 @@ Common `content_type`: `text/markdown`, `text/html`, `text/plain`, `application/
 | Status | Meaning |
 | --- | --- |
 | `401` | Invalid or revoked token |
-| `404` | Unknown session or E2EE not configured |
+| `404` | Unknown session |
+| `428` | E2EE not configured (`e2ee_required`) — human must set up encryption |
+| `400` | Plaintext payload rejected (`plaintext_not_allowed`) |
 | `413` | File too large |
+| `415` | Multipart / non-JSON artifact upload |
 | `507` | Account quota full |
 | `503` | S3 not configured on server |
 
@@ -72,18 +80,18 @@ Read `{ "error": "..." }` and report to the human.
 
 ## Checklist before finishing
 
-- [ ] `title` is plain language; `summary` says what to open first
-- [ ] Sensible `filename` extensions (`.md`, `.html`, `.png`, …)
-- [ ] Text/HTML via JSON; binaries via multipart
+- [ ] Human has completed encryption setup in the portal
+- [ ] Title and summary encrypted as envelopes (not plaintext JSON fields)
+- [ ] Sensible filenames encrypted in `encrypted_filename`
 - [ ] Human notified (portal refreshes in ~5 seconds)
 
 ## Examples
 
-See [references/examples.md](references/examples.md) for curl and Python.
+See [references/examples.md](references/examples.md).
 
-## Encrypted deliveries
+## Encryption details
 
-If content is sensitive, load the **agent-relay-e2ee** skill and check `GET /api/agent/e2ee/config` first.
+Envelope format, Web Crypto compatibility, and the reference script: **agent-relay-e2ee** skill.
 
 ## Full reference
 

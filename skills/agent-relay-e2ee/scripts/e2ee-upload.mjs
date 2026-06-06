@@ -100,8 +100,20 @@ const filename = process.argv[3] ?? 'delivery.md';
 const content = process.argv[4] ?? '# Encrypted delivery\n\nSent via agent-relay-e2ee reference script.\n';
 const contentType = filename.endsWith('.md') ? 'text/markdown' : 'text/plain';
 
-const config = await agentFetch('/api/agent/e2ee/config');
-if (!config?.configured) throw new Error('E2EE is not configured for this account');
+let config;
+try {
+	config = await agentFetch('/api/agent/e2ee/config');
+} catch (err) {
+	if (String(err).includes('428')) {
+		throw new Error(
+			'E2EE is not configured for this account (428 e2ee_required). Human must complete Set up encryption in the portal.'
+		);
+	}
+	throw err;
+}
+if (!config?.configured) {
+	throw new Error('E2EE is not configured for this account');
+}
 
 const publicKeyJwk = config.publicKeyJwk;
 const { session } = await agentFetch('/api/agent/sessions', {

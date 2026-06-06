@@ -4,7 +4,7 @@ description: Deploy and operate a self-hosted Agent Relay instance on Railway wi
 license: MIT
 metadata:
   author: mmmikael
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Agent Relay on Railway
@@ -40,7 +40,12 @@ Deploy [Agent Relay](https://github.com/mmmikael/arelay) — SvelteKit inbox + a
 | `S3_PREFIX` | Default `agent-relay` |
 | `EMAIL_FROM` + Cloudflare or SMTP | Account verification in production |
 
-Optional: `SESSION_VERSION` to invalidate sessions after secret rotation.
+Optional:
+
+| Variable | Notes |
+| --- | --- |
+| `SESSION_VERSION` | Bump to invalidate human sessions after secret rotation |
+| `EMAIL_REVIEW_RELAY_ENABLED` | Set to `true` to enable Email Review Relay (outbound email drafts for human approve/reject). Enabled on [arelay.app](https://arelay.app) hosted; opt-in for self-hosts. Plugin schema is applied via `ensureSchema` on boot. Humans configure per-account Cloudflare Email Sending in the portal (**Account → Email sending**); system `CLOUDFLARE_*` vars above remain for signup verification only. |
 
 ## S3 region pitfall
 

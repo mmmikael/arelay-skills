@@ -1,10 +1,10 @@
 ---
 name: agent-relay-e2ee
-description: Upload end-to-end encrypted sessions and artifacts to Agent Relay using P-256 ECDH and AES-256-GCM. Required for all agent deliveries — plaintext uploads return 400. Use when connecting agents to arelay.app or any Agent Relay instance.
+description: Upload end-to-end encrypted sessions, artifacts, and email drafts to Agent Relay using P-256 ECDH and AES-256-GCM. Required for all agent deliveries — plaintext uploads return 400. Use when connecting agents to arelay.app or any Agent Relay instance, including Email Review Relay outbound drafts.
 license: MIT
 metadata:
   author: mmmikael
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Agent Relay E2EE uploads
@@ -44,14 +44,23 @@ Each encrypted string or file uses:
 
 Use P-256 ECDH with the relay `publicKeyJwk`, derive AES-256-GCM key, fresh ephemeral key + IV per field/file.
 
-**Important:** The browser uses Web Crypto `deriveKey(ECDH → AES-GCM)`. Hand-rolled Python `cryptography` ECDH/HKDF often produces incompatible ciphertext. Prefer the bundled reference script:
+**Important:** The browser uses Web Crypto `deriveKey(ECDH → AES-GCM)`. Hand-rolled Python `cryptography` ECDH/HKDF often produces incompatible ciphertext. Prefer the bundled reference scripts:
+
+**Inbox delivery:**
 
 ```bash
 AGENT_RELAY_URL=https://arelay.app AGENT_API_TOKEN=ar_... \
   node scripts/e2ee-upload.mjs "Delivery title" "report.md" "# Report body"
 ```
 
-(`scripts/e2ee-upload.mjs` ships with this skill.)
+**Email draft (Email Review Relay):**
+
+```bash
+AGENT_RELAY_URL=https://arelay.app AGENT_API_TOKEN=ar_... \
+  node scripts/e2ee-email-draft.mjs recipient@example.com "Subject" "<p>HTML</p>"
+```
+
+Both scripts ship with this skill under `scripts/`.
 
 ## Create encrypted session
 
@@ -91,6 +100,44 @@ Content-Type: application/json
 
 `encrypted_payload` is the file envelope **without** `ciphertext`; file bytes go in `ciphertext_base64`.
 
+## Email drafts (Email Review Relay)
+
+Human-in-the-loop outbound email: agents submit encrypted drafts; the human previews in the inbox and **Approve**s or **Reject**s before send.
+
+| Deployment | Plugin |
+| --- | --- |
+| [arelay.app](https://arelay.app) | Enabled by default |
+| Self-hosted | Set `EMAIL_REVIEW_RELAY_ENABLED=true` on the server |
+
+**Human setup:** portal **Account → Email sending (Cloudflare API)** — per-user Cloudflare Account ID and API token (encrypted server-side). Required for **Approve** to send mail. Server `CLOUDFLARE_*` env vars are for signup verification only.
+
+**Agent API:**
+
+```http
+POST /api/agent/email-drafts
+Content-Type: application/json
+
+{
+  "encrypted": true,
+  "encrypted_to": { "...": "recipient envelope" },
+  "encrypted_from_email": { "...": "sender envelope" },
+  "encrypted_from_name": { "...": "optional display name" },
+  "encrypted_subject": { "...": "subject envelope" },
+  "encrypted_html": { "...": "HTML body envelope" },
+  "encrypted_text": { "...": "optional plain text" },
+  "encrypted_session_summary": { "...": "optional inbox summary" },
+  "idempotency_key": "optional-stable-key"
+}
+```
+
+**Required:** `encrypted_to`, `encrypted_from_email`, `encrypted_subject`, `encrypted_html`.
+
+**201:** `{ "session": { ... }, "draft": { "id", "session_id", "status": "pending", ... } }`
+
+Poll: `GET /api/agent/email-drafts/{id}` or `GET /api/agent/sessions/{id}` (`email_draft` when applicable). Status values: `pending`, `approved`, `rejected`, `sent`, `failed`.
+
+Plaintext drafts are rejected (`400`). When the plugin is disabled on the server, endpoints return **404**.
+
 ## Storage limits
 
 **25 MB** per artifact, **500 MB** per account.
@@ -101,13 +148,8 @@ Content-Type: application/json
 | --- | --- | --- |
 | 428 | `e2ee_required` | Human has not set up encryption in the portal |
 | 400 | `plaintext_not_allowed` | Request omitted `encrypted: true` or envelope fields |
+| 404 | — | Email Review Relay plugin disabled, or unknown draft |
 | 415 | — | Multipart / non-JSON artifact body |
-
-## Email drafts (Email Review Relay plugin)
-
-When `EMAIL_REVIEW_RELAY_ENABLED=true`, POST `/api/agent/email-drafts` with `encrypted: true`
-and encrypted envelope fields (`encrypted_to`, `encrypted_from_email`, `encrypted_subject`,
-`encrypted_html`, etc.). Plaintext drafts are rejected.
 
 ## Reference
 

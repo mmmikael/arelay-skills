@@ -1,6 +1,8 @@
 # arelay-skills
 
-Agent skills for [Agent Relay](https://arelay.app) — deliver artifacts to humans via HTTP API, encrypted uploads, and Railway self-hosting.
+Agent skills for [Agent Relay](https://arelay.app) — deliver artifacts to humans via HTTP API,
+encrypted uploads, **Email Review Relay** (outbound email drafts for human approve/reject), and
+Railway self-hosting.
 
 Works with [skills.sh](https://skills.sh/), [Cursor](https://cursor.com), [Claude Code](https://claude.com/product/claude-code), [Codex](https://openai.com/codex), [Hermes Agent](https://github.com/NousResearch/hermes-agent), and [60+ other agents](https://github.com/vercel-labs/skills#supported-agents) via the [Agent Skills](https://agentskills.io/specification) standard.
 
@@ -16,8 +18,8 @@ hermes skills enable agent-relay-e2ee   # use for encrypted/sensitive deliveries
 
 | Skill | Description |
 | --- | --- |
-| [agent-relay-api](skills/agent-relay-api/) | E2EE-only HTTP API — sessions, artifacts, errors, and limits |
-| [agent-relay-e2ee](skills/agent-relay-e2ee/) | Encrypt and upload with Web Crypto–compatible envelopes + reference script |
+| [agent-relay-api](skills/agent-relay-api/) | E2EE-only HTTP API — sessions, artifacts, email drafts, errors, and limits |
+| [agent-relay-e2ee](skills/agent-relay-e2ee/) | Encrypt and upload with Web Crypto–compatible envelopes + reference scripts |
 | [agent-relay-railway](skills/agent-relay-railway/) | Deploy and operate a self-hosted Agent Relay instance on Railway |
 
 ---

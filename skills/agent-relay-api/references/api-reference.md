@@ -108,12 +108,83 @@ GET /api/agent/sessions
 
 **200:** `{ "sessions": [ { "id", "encryption_version", "encrypted_title", "encrypted_summary", "artifact_count", ... } ] }` ordered by `updated_at` descending.
 
+## Email Review Relay
+
+Enabled on [arelay.app](https://arelay.app) by default. Self-hosters set `EMAIL_REVIEW_RELAY_ENABLED=true`. When disabled, email draft endpoints return **404** (`Plugin not enabled`).
+
+**Human setup:** portal **Account → Email sending (Cloudflare API)** — per-user Cloudflare credentials (encrypted server-side). Used only when the human **Approve**s a draft. Server `CLOUDFLARE_*` env vars are for account verification, not draft sending.
+
+### Create email draft
+
+```http
+POST /api/agent/email-drafts
+Content-Type: application/json
+
+{
+  "encrypted": true,
+  "encrypted_to": { "v": 1, "alg": "P-256-ECDH-A256GCM", "epk": { ... }, "iv": "...", "ciphertext": "..." },
+  "encrypted_from_email": { "...": "sender envelope" },
+  "encrypted_from_name": { "...": "optional display name envelope" },
+  "encrypted_subject": { "...": "subject envelope" },
+  "encrypted_html": { "...": "HTML body envelope" },
+  "encrypted_text": { "...": "optional plain-text envelope" },
+  "encrypted_session_summary": { "...": "optional inbox summary envelope" },
+  "encrypted_metadata": { "...": "optional metadata envelope" },
+  "idempotency_key": "optional-stable-key"
+}
+```
+
+**Required envelopes:** `encrypted_to`, `encrypted_from_email`, `encrypted_subject`, `encrypted_html`.
+
+**201** (new draft) or **200** (idempotency replay):
+
+```json
+{
+  "session": {
+    "id": "uuid",
+    "encryption_version": "e2ee-v1",
+    "encrypted_title": { "...": "envelope" },
+    "encrypted_summary": { "...": "optional envelope" },
+    "created_at": "...",
+    "updated_at": "...",
+    "is_read": false
+  },
+  "draft": {
+    "id": "uuid",
+    "session_id": "uuid",
+    "encryption_version": "e2ee-v1",
+    "status": "pending",
+    "reviewed_at": null,
+    "sent_at": null,
+    "send_error": null
+  }
+}
+```
+
+Draft field ciphertext is **not** returned to agents — only `status` and metadata. The human decrypts in the portal.
+
+**Draft status values:** `pending`, `approved`, `rejected`, `sent`, `failed`.
+
+### Get email draft
+
+```http
+GET /api/agent/email-drafts/<draft_id>
+```
+
+**200:** `{ "session": { ... }, "draft": { "id", "session_id", "encryption_version", "status", "reviewed_at", "sent_at", "send_error" } }`
+
+Poll draft status with this endpoint or **Get session** above (`email_draft` included when applicable).
+
+### Human review (portal, not agent API)
+
+Open the session → decrypt and preview HTML → **Approve** (sends via human's Cloudflare credentials) or **Reject**. Approve requires Cloudflare Email Sending configured on the account.
+
 ## Errors
 
 | Status | Code | Meaning |
 | --- | --- | --- |
 | **401** | — | Invalid or revoked token |
-| **404** | — | Unknown session |
+| **404** | — | Unknown session/draft, or Email Review Relay plugin disabled |
 | **413** | — | Artifact over 25 MB |
 | **415** | — | Non-JSON artifact body |
 | **428** | `e2ee_required` | Human has not set up encryption in the portal |

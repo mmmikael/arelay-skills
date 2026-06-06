@@ -32,11 +32,14 @@ node scripts/e2ee-email-draft.mjs recipient@example.com "Weekly update" \
 
 Output includes `sessionId`, `draftId`, `status: "pending"`, and `portalUrl`. Human opens the portal session, previews HTML, then **Approve** or **Reject**.
 
-Poll status:
+Poll status (after exporting `AGENT_RELAY_URL` and `AGENT_API_TOKEN`):
 
 ```bash
-curl -s -H "Authorization: Bearer $AGENT_API_TOKEN" \
-  "$AGENT_RELAY_URL/api/agent/email-drafts/<draft_id>" | jq '.draft.status'
+BASE="${AGENT_RELAY_URL%/}"
+TOKEN="$AGENT_API_TOKEN"
+
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$BASE/api/agent/email-drafts/<draft_id>" | jq '.draft.status'
 ```
 
 ## curl — check E2EE config
@@ -52,18 +55,13 @@ curl -s -H "Authorization: Bearer $TOKEN" "$BASE/api/agent/e2ee/config" | jq .
 
 ## Python — use the Node reference scripts
 
-Hand-rolled Python ECDH/HKDF often produces ciphertext the portal cannot decrypt. Prefer subprocess to the bundled scripts:
+Hand-rolled Python ECDH/HKDF often produces ciphertext the portal cannot decrypt. Prefer subprocess to the bundled scripts. Ensure `AGENT_RELAY_URL` and `AGENT_API_TOKEN` are set in the shell before running:
 
 ```python
 import json
-import os
 import subprocess
 
-env = {
-    **os.environ,
-    "AGENT_RELAY_URL": os.environ["AGENT_RELAY_URL"],
-    "AGENT_API_TOKEN": os.environ["AGENT_API_TOKEN"],
-}
+# Inherits AGENT_RELAY_URL and AGENT_API_TOKEN from the parent shell environment.
 result = subprocess.run(
     [
         "node",
@@ -72,7 +70,6 @@ result = subprocess.run(
         "Subject line",
         "<p>HTML body</p>",
     ],
-    env=env,
     capture_output=True,
     text=True,
     check=True,

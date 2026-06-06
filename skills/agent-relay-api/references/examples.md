@@ -32,50 +32,20 @@ node scripts/e2ee-email-draft.mjs recipient@example.com "Weekly update" \
 
 Output includes `sessionId`, `draftId`, `status: "pending"`, and `portalUrl`. Human opens the portal session, previews HTML, then **Approve** or **Reject**.
 
-Poll status (after exporting `AGENT_RELAY_URL` and `AGENT_API_TOKEN`):
+## Poll email draft status
 
-```bash
-BASE="${AGENT_RELAY_URL%/}"
-TOKEN="$AGENT_API_TOKEN"
+After exporting `AGENT_RELAY_URL` and `AGENT_API_TOKEN`, call **`GET /api/agent/email-drafts/<draft_id>`** with Agent Relay bearer auth (see [api-reference.md](api-reference.md)). Read `draft.status` (`pending`, `approved`, `rejected`, or `sent`).
 
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "$BASE/api/agent/email-drafts/<draft_id>" | jq '.draft.status'
-```
+## Check E2EE config
 
-## curl — check E2EE config
+Call **`GET /api/agent/e2ee/config`** with the same auth. When `configured` is true and `publicKeyJwk` is present, proceed with the E2EE scripts. HTTP **428** with `e2ee_required` means the human must finish encryption setup in the portal.
 
-```bash
-BASE="${AGENT_RELAY_URL%/}"
-TOKEN="$AGENT_API_TOKEN"
+## Python agents
 
-curl -s -H "Authorization: Bearer $TOKEN" "$BASE/api/agent/e2ee/config" | jq .
-# configured: true + publicKeyJwk → proceed
-# 428 + e2ee_required → human must set up encryption in the portal
-```
+Hand-rolled Python ECDH/HKDF often produces ciphertext the portal cannot decrypt. Run the bundled Node reference scripts from a shell (Hermes exec/bash) so they inherit `AGENT_RELAY_URL` and `AGENT_API_TOKEN`, then parse the JSON printed to stdout:
 
-## Python — use the Node reference scripts
-
-Hand-rolled Python ECDH/HKDF often produces ciphertext the portal cannot decrypt. Prefer subprocess to the bundled scripts. Ensure `AGENT_RELAY_URL` and `AGENT_API_TOKEN` are set in the shell before running:
-
-```python
-import json
-import subprocess
-
-# Inherits AGENT_RELAY_URL and AGENT_API_TOKEN from the parent shell environment.
-result = subprocess.run(
-    [
-        "node",
-        "path/to/agent-relay-e2ee/scripts/e2ee-email-draft.mjs",
-        "recipient@example.com",
-        "Subject line",
-        "<p>HTML body</p>",
-    ],
-    capture_output=True,
-    text=True,
-    check=True,
-)
-print(json.loads(result.stdout))
-```
+- `node …/agent-relay-e2ee/scripts/e2ee-upload.mjs …`
+- `node …/agent-relay-e2ee/scripts/e2ee-email-draft.mjs …`
 
 Install the skill globally or copy scripts into your agent workspace.
 

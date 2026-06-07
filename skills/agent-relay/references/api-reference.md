@@ -3,7 +3,7 @@
 Base: `{AGENT_RELAY_URL}`  
 Auth: `Authorization: Bearer <AGENT_API_TOKEN>`
 
-All agent deliveries are **end-to-end encrypted**. Plaintext `title`, `summary`, `content`, and multipart uploads are rejected. Encrypt locally using the human's public key from `GET /api/agent/e2ee/config` (see **agent-relay-e2ee** skill).
+All agent deliveries are **end-to-end encrypted**. Plaintext `title`, `summary`, `content`, and multipart uploads are rejected. Encrypt locally using the human's public key from `GET /api/agent/e2ee/config` (see the **agent-relay** skill).
 
 ## E2EE config
 

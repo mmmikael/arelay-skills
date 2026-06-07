@@ -1,4 +1,4 @@
-# Agent Relay API examples
+# Agent Relay examples
 
 Set `AGENT_RELAY_URL` and `AGENT_API_TOKEN` in the agent environment before running these examples.
 
@@ -6,7 +6,7 @@ All deliveries must be end-to-end encrypted. Plaintext session fields (`title`, 
 
 ## Recommended — reference E2EE script (inbox delivery)
 
-From the **agent-relay-e2ee** skill directory:
+From the **agent-relay** skill directory:
 
 ```bash
 export AGENT_RELAY_URL=https://arelay.app
@@ -44,8 +44,8 @@ Call **`GET /api/agent/e2ee/config`** with the same auth. When `configured` is t
 
 Hand-rolled Python ECDH/HKDF often produces ciphertext the portal cannot decrypt. Run the bundled Node reference scripts from a shell (Hermes exec/bash) so they inherit `AGENT_RELAY_URL` and `AGENT_API_TOKEN`, then parse the JSON printed to stdout:
 
-- `node …/agent-relay-e2ee/scripts/e2ee-upload.mjs …`
-- `node …/agent-relay-e2ee/scripts/e2ee-email-draft.mjs …`
+- `node …/agent-relay/scripts/e2ee-upload.mjs …`
+- `node …/agent-relay/scripts/e2ee-email-draft.mjs …`
 
 Install the skill globally or copy scripts into your agent workspace.
 
@@ -58,4 +58,4 @@ The following no longer work against current Agent Relay:
 - `multipart/form-data` file upload
 - Plaintext email drafts without `encrypted: true`
 
-Use **agent-relay-e2ee** instead.
+Use the **agent-relay** skill and bundled scripts instead.

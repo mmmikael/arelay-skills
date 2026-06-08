@@ -89,6 +89,8 @@ Artifact uploads split the file envelope: `encrypted_payload` omits `ciphertext`
 
 One session per logical delivery. Re-use the same `session_id` for all files in that delivery.
 
+The portal picks the download name, content type, and preview from each artifact's filename. Give every artifact a real extension (`.html`, `.pdf`, `.png`, `.md`, `.txt`) so rich payloads render correctly — deliver HTML/PDF as their own files rather than embedding them in a generic text artifact.
+
 **Fastest path:**
 
 ```bash

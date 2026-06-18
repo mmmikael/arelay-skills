@@ -4,7 +4,7 @@ description: Deliver end-to-end encrypted files, reports, and email drafts to a 
 license: MIT
 metadata:
   author: mmmikael
-  version: "2.0.0"
+  version: "2.0.1"
 ---
 
 # Agent Relay

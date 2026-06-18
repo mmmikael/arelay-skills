@@ -1,6 +1,11 @@
 /**
  * Shared E2EE helpers for Agent Relay agent scripts.
- * Matches Web Crypto in arelay src/lib/e2ee.ts — do not hand-roll Python ECDH/HKDF.
+ *
+ * These are a deliberately dependency-free copy of the Agent Relay envelope
+ * format (P-256-ECDH-A256GCM), so the skill runs with plain `node` and no
+ * npm install. The canonical, published reference is @arelay/core
+ * (github.com/mmmikael/arelay, packages/core) — keep this byte-compatible with
+ * it. Compatibility is locked by e2ee.test.mjs. Do not hand-roll ECDH/HKDF.
  */
 import { webcrypto } from 'node:crypto';
 

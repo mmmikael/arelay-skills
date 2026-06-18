@@ -1,6 +1,6 @@
 /**
  * Reference encrypted upload for Agent Relay agents.
- * Matches Web Crypto in arelay src/lib/e2ee.ts — do not hand-roll Python ECDH/HKDF.
+ * Envelope format matches @arelay/core (the published reference) — do not hand-roll ECDH/HKDF.
  *
  * Usage:
  *   AGENT_RELAY_URL=https://arelay.app AGENT_API_TOKEN=ar_... node e2ee-upload.mjs "Title" "file.md"

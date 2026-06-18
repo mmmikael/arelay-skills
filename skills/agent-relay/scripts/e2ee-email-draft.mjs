@@ -1,6 +1,6 @@
 /**
  * Submit an E2EE email draft for human review (Email Review Relay).
- * Matches Web Crypto in arelay src/lib/e2ee.ts — do not hand-roll Python ECDH/HKDF.
+ * Envelope format matches @arelay/core (the published reference) — do not hand-roll ECDH/HKDF.
  *
  * Usage:
  *   AGENT_RELAY_URL=https://arelay.app AGENT_API_TOKEN=ar_... \
